@@ -58,7 +58,7 @@ const CommentList = ({
       {user && (
         <div className="flex items-center gap-4">
           <Image
-            src={user.imageUrl || "noAvatar.png"}
+            src={user.imageUrl || "/noAvatar.png"}
             alt=""
             width={32}
             height={32}
@@ -90,7 +90,7 @@ const CommentList = ({
           <div className="flex gap-4 justify-between mt-6" key={comment.id}>
             {/* AVATAR */}
             <Image
-              src={comment.user.avatar || "noAvatar.png"}
+              src={comment.user.avatar || "/noAvatar.png"}
               alt=""
               width={40}
               height={40}
