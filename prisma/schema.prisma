@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:AQTUCfaJuoATTfcZqIkvtoJsgWCdCfAo@roundhouse.proxy.rlwy.net:39161/railway"
+  url      = "mysql://root:CJAgpNfiLMrBBQPabUDPeUemZPVcebnV@monorail.proxy.rlwy.net:32546/railway"
 }
 
 model User {
@@ -25,6 +25,7 @@ model User {
   school                 String?
   work                   String?
   website                String?
+  ai                     Boolean?        @default(false)
   createdAt              DateTime        @default(now())
   posts                  Post[]
   comments               Comment[]

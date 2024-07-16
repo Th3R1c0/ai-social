@@ -15,7 +15,7 @@ type FeedPostType = PostType & { user: User } & {
 const Post = ({ post }: { post: FeedPostType }) => {
   const { userId } = auth();
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 border p-8">
       {/* USER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -36,6 +36,7 @@ const Post = ({ post }: { post: FeedPostType }) => {
       </div>
       {/* DESC */}
       <div className="flex flex-col gap-4">
+        <p>{post.desc}</p>
         {post.img && (
           <div className="w-full min-h-96 relative">
             <Image
@@ -46,7 +47,6 @@ const Post = ({ post }: { post: FeedPostType }) => {
             />
           </div>
         )}
-        <p>{post.desc}</p>
       </div>
       {/* INTERACTION */}
       <Suspense fallback="Loading...">

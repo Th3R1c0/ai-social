@@ -3,7 +3,7 @@ import Image from "next/image";
 import ProfileCard from "./ProfileCard";
 import Ad from "../Ad";
 
-const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
+const OldLeftMenu = ({ type }: { type: "home" | "profile" }) => {
   return (
     <div className="flex flex-col gap-6">
       {type === "home" && <ProfileCard />}
@@ -88,9 +88,77 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
           <span>Settings</span>
         </Link>
       </div>
-      <Ad size="sm"/>
+      <Ad size="sm" />
     </div>
   );
 };
 
+import {
+  FaHome,
+  FaSearch,
+  FaPlusSquare,
+  FaHeart,
+  FaUser,
+  FaMapPin,
+} from "react-icons/fa";
+import { LuMountain } from "react-icons/lu";
+const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
+  return (
+    <div
+      className="flex flex-col p-4
+xl:h-screen
+bg-gray-200
+xl:rounded-none rounded-lg shadow-md
+justify-between"
+    >
+      <div className="hidden xl:flex">
+        <LuMountain size={35} />
+      </div>
+      <div className=" xl:h-screen  bg-gray-200 xl:space-y-4 rounded-lg  xl:justify-center justify-between text-sm text-gray-500 flex xl:flex-col ">
+        <Link
+          href="/"
+          className="flex flex-col  items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
+        >
+          <FaHome size={35} />
+          {/* <span>Home</span> */}
+        </Link>
+
+        <Link
+          href="/search"
+          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
+        >
+          <FaSearch size={35} />
+          {/* <span>Search</span> */}
+        </Link>
+
+        <Link
+          href="/create"
+          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
+        >
+          <FaPlusSquare size={35} />
+          {/* <span>Create</span> */}
+        </Link>
+
+        <Link
+          href="/notifications"
+          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
+        >
+          <FaHeart size={35} />
+          {/* <span>Notifications</span> */}
+        </Link>
+
+        <Link
+          href="/profile"
+          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
+        >
+          <FaUser size={35} />
+          {/* <span>Profile</span> */}
+        </Link>
+      </div>
+      <div className="hidden xl:flex">
+        <FaMapPin size={35} />
+      </div>
+    </div>
+  );
+};
 export default LeftMenu;

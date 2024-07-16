@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "./client";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 export const switchFollow = async (userId: string) => {
   const { userId: currentUserId } = auth();
@@ -235,6 +236,9 @@ export const switchLike = async (postId: number) => {
   }
 };
 
+
+
+
 export const addComment = async (postId: number, desc: string) => {
   const { userId } = auth();
 
@@ -257,6 +261,47 @@ export const addComment = async (postId: number, desc: string) => {
     console.log(err);
     throw new Error("Something went wrong!");
   }
+};
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+export const GenerateComments = async (postId: number) => {
+    //get post 
+    const post = await prisma.post.findFirst({
+      where: {
+        id: postId,
+      },
+    });
+    console.log('getting post: ', post)
+    //get all users that are ai=true
+    const aiUsers = await prisma.user.findMany({
+      where: {
+        ai: true,
+      },
+    });
+    console.log('getting aiusers: ', aiUsers)
+    //send aiusers, post to gemini ai api asking to generate a response in the persona of each ai using user ai description as context to how they would reply, get response
+    //create comment for each aiuser
+    //return comments
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        generationConfig: { responseMimeType: "application/json" },
+      });
+
+      const prompt = `generate a response to the following post ${post?.desc}, in the persona of ${aiUsers[0].name} in the following schema:
+      [{
+        user: 'username',
+        comment: 'usercomment',
+      },] 
+      `
+   
+
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = await response.text();
+      console.log('geminin response: ', text)
+      return text;
+    
 };
 
 export const addPost = async (formData: FormData, img: string) => {
