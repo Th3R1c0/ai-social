@@ -8,10 +8,9 @@ import { notFound } from "next/navigation";
 
 const ProfilePage = async ({ params }: { params: { username: string } }) => {
   const username = params.username;
-
   const user = await prisma.user.findFirst({
     where: {
-      username,
+      id: username,
     },
     include: {
       _count: {
@@ -47,9 +46,6 @@ const ProfilePage = async ({ params }: { params: { username: string } }) => {
 
   return (
     <div className="flex gap-6 pt-6">
-      <div className="hidden xl:block w-[20%]">
-        <LeftMenu type="profile" />
-      </div>
       <div className="w-full lg:w-[70%] xl:w-[50%]">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center justify-center">
@@ -69,9 +65,10 @@ const ProfilePage = async ({ params }: { params: { username: string } }) => {
               />
             </div>
             <h1 className="mt-20 mb-4 text-2xl font-medium">
-              {user.name && user.surname
+              {/* {user.name && user.surname
                 ? user.name + " " + user.surname
-                : user.username}
+                : user.username} */}
+                Rico rico
             </h1>
             <div className="flex items-center justify-center gap-12 mb-4">
               <div className="flex flex-col items-center">

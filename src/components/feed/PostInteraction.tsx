@@ -74,20 +74,20 @@ const PostInteraction = ({
             <span className="hidden md:inline"> Comments</span>
           </span>
         </div>
-        <div className="flex items-center gap-4  p-2 rounded-xl">
+        {/* <div className="flex items-center gap-4  p-2 rounded-xl">
           <FaShare size={20} className="cursor-pointer" />
 
           <span className="text-gray-500">
             <span className="hidden md:inline"> Share</span>
           </span>
-        </div>
-        <div className="flex items-center gap-4  p-2 rounded-xl">
+        </div> */}
+        {/* <div className="flex items-center gap-4  p-2 rounded-xl">
           <FaRetweet size={20} className="cursor-pointer" />
 
           <span className="text-gray-500">
             <span className="hidden md:inline"> Repost</span>
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

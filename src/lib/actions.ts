@@ -5,7 +5,7 @@ import prisma from "./client";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
+// user toggle like function
 export const switchFollow = async (userId: string) => {
   const { userId: currentUserId } = auth();
 
@@ -90,7 +90,7 @@ export const switchBlock = async (userId: string) => {
     throw new Error("Something went wrong!");
   }
 };
-
+// beta accept ai follow request
 export const acceptFollowRequest = async (userId: string) => {
   const { userId: currentUserId } = auth();
 
@@ -125,7 +125,7 @@ export const acceptFollowRequest = async (userId: string) => {
     throw new Error("Something went wrong!");
   }
 };
-
+// beta feature, decline ai request follow
 export const declineFollowRequest = async (userId: string) => {
   const { userId: currentUserId } = auth();
 
@@ -153,7 +153,7 @@ export const declineFollowRequest = async (userId: string) => {
     throw new Error("Something went wrong!");
   }
 };
-
+// update user profile
 export const updateProfile = async (
   prevState: { success: boolean; error: boolean },
   payload: { formData: FormData; cover: string }
@@ -202,7 +202,7 @@ export const updateProfile = async (
     return { success: false, error: true };
   }
 };
-
+// toggle like for user
 export const switchLike = async (postId: number) => {
   const { userId } = auth();
 
@@ -235,10 +235,7 @@ export const switchLike = async (postId: number) => {
     throw new Error("Something went wrong");
   }
 };
-
-
-
-
+// add comment to post, different from ai comments
 export const addComment = async (postId: number, desc: string) => {
   const { userId } = auth();
 
@@ -262,66 +259,101 @@ export const addComment = async (postId: number, desc: string) => {
     throw new Error("Something went wrong!");
   }
 };
+// add ai comments
+export const addAIComment = async (
+  postId: number,
+  desc: string,
+  userId: string
+) => {
+  try {
+    const createdComment = await prisma.comment.create({
+      data: {
+        desc,
+        userId, // Use the provided userId for the AI user
+        postId,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    return createdComment;
+  } catch (err) {
+    console.log(err);
+    throw new Error("Something went wrong!");
+  }
+};
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const GenerateComments = async (postId: number) => {
-    //get post 
-    const post = await prisma.post.findFirst({
-      where: {
-        id: postId,
-      },
-    });
-    console.log('getting post: ', post)
-    //get all users that are ai=true
-    const aiUsers = await prisma.user.findMany({
-      where: {
-        ai: true,
-      },
-    });
-    console.log('getting aiusers: ', aiUsers)
-    //send aiusers, post to gemini ai api asking to generate a response in the persona of each ai using user ai description as context to how they would reply, get response
-    //create comment for each aiuser
-    //return comments
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: { responseMimeType: "application/json" },
-      });
+  //get post
+  const post = await prisma.post.findFirst({
+    where: {
+      id: postId,
+    },
+  });
+  console.log("getting post: ", post);
+  //get all users that are ai=true
+  const aiUsers = await prisma.user.findMany({
+    where: {
+      ai: true,
+    },
+  });
+  console.log("getting aiusers: ", aiUsers);
+  //send aiusers, post to gemini ai api asking to generate a response in the persona of each ai using user ai description as context to how they would reply, get response
+  //create comment for each aiuser
+  //return comments
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: { responseMimeType: "application/json" },
+  });
 
-      const prompt = `generate a response to the following post ${post?.desc}, in the persona of ${aiUsers[0].name} in the following schema:
+  // Create comments for each AI user using addAIComment
+  for (const aiUser of aiUsers) {
+    const prompt = `generate a response to the following post ${
+      post?.desc
+    }, in the persona of ${JSON.stringify(aiUser)} in the following schema:
       [{
         user: 'username',
         comment: 'usercomment',
+        likesPost: 'true/false' // Indicate if the comment is positive or negative towards the persona or positive/negative in general
       },] 
-      `
-   
+    `;
 
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      const text = await response.text();
-      console.log('geminin response: ', text)
-      return text;
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = await response.text();
+    console.log("geminin response: ", text);
+
+    // Parse the AI comments from the response
+    const aiComments = JSON.parse(text);
+
+    // Map over aiComments and add each comment using addAIComment
+    for (const aiComment of aiComments) {
+      await addAIComment(postId, aiComment.comment, aiUser.id); // Pass userId for AI user
+      await switchAIlike(postId, aiUser.id, aiComment.likesPost === "true"); // Like or unlike based on likesPost
+    }
     
+  }
+  // revalidatePath("/");
 };
-
 export const addPost = async (formData: FormData, img: string) => {
   const desc = formData.get("desc") as string;
 
   const Desc = z.string().min(1).max(255);
-
   const validatedDesc = Desc.safeParse(desc);
 
   if (!validatedDesc.success) {
-    //TODO
     console.log("description is not valid");
     return;
   }
-  const { userId } = auth();
 
+  const { userId } = auth();
   if (!userId) throw new Error("User is not authenticated!");
 
   try {
-    await prisma.post.create({
+    const createdPost = await prisma.post.create({
       data: {
         desc: validatedDesc.data,
         userId,
@@ -329,7 +361,11 @@ export const addPost = async (formData: FormData, img: string) => {
       },
     });
 
+    // Generate AI comments for the new post using the created post's ID
+    await GenerateComments(createdPost.id); // Call this without await to not block the UI
+
     revalidatePath("/");
+    return createdPost; // Return the created post for immediate UI update
   } catch (err) {
     console.log(err);
   }
@@ -370,7 +406,7 @@ export const addStory = async (img: string) => {
     console.log(err);
   }
 };
-
+// delete posts
 export const deletePost = async (postId: number) => {
   const { userId } = auth();
 
@@ -383,8 +419,42 @@ export const deletePost = async (postId: number) => {
         userId,
       },
     });
-    revalidatePath("/")
+    revalidatePath("/");
   } catch (err) {
     console.log(err);
+  }
+};
+// toggle ai likes on user posts
+export const switchAIlike = async (
+  postId: number,
+  userId: string,
+  like: boolean
+) => {
+  try {
+    if (like) {
+      await prisma.like.create({
+        data: {
+          postId,
+          userId,
+        },
+      });
+    } else {
+      const existingLike = await prisma.like.findFirst({
+        where: {
+          postId,
+          userId,
+        },
+      });
+      if (existingLike) {
+        await prisma.like.delete({
+          where: {
+            id: existingLike.id,
+          },
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    throw new Error("Something went wrong!");
   }
 };

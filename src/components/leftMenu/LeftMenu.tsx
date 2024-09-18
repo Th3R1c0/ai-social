@@ -1,7 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import ProfileCard from "./ProfileCard";
-import Ad from "../Ad";
+import Ad from "../Ad"; // Add this import
 
 const OldLeftMenu = ({ type }: { type: "home" | "profile" }) => {
   return (
@@ -92,7 +94,14 @@ const OldLeftMenu = ({ type }: { type: "home" | "profile" }) => {
     </div>
   );
 };
-
+import {
+  ClerkLoaded,
+  ClerkLoading,
+  SignedIn,
+  SignedOut,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 import {
   FaHome,
   FaSearch,
@@ -102,61 +111,70 @@ import {
   FaMapPin,
 } from "react-icons/fa";
 import { LuMountain } from "react-icons/lu";
+
+import { usePathname } from "next/navigation"; // Update the import
+
 const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
+  const { user, isLoaded } = useUser();
+  const pathname = usePathname(); // Get the current pathname
+  const links = [
+    // Create an array of link objects
+    { href: "/", icon: <FaHome size={35} />, label: "Home" },
+    { href: "/search", icon: <FaSearch size={35} />, label: "Search" },
+    { href: "/create", icon: <FaPlusSquare size={35} />, label: "Create" },
+    {
+      href: "/notifications",
+      icon: <FaHeart size={35} />,
+      label: "Notifications",
+    },
+    {
+      href: `/profile/${user?.id}`,
+      icon: <FaUser size={35} />,
+      label: "Profile",
+    },
+  ];
+
   return (
-    <div
-      className="flex flex-col p-4
-xl:h-screen
-bg-gray-200
-xl:rounded-none rounded-lg shadow-md
-justify-between"
-    >
+    <div className="flex flex-col p-4 xl:h-screen bg-white xl:rounded-none rounded-lg shadow-md justify-between">
       <div className="hidden xl:flex">
         <LuMountain size={35} />
       </div>
-      <div className=" xl:h-screen  bg-gray-200 xl:space-y-4 rounded-lg  xl:justify-center justify-between text-sm text-gray-500 flex xl:flex-col ">
-        <Link
-          href="/"
-          className="flex flex-col  items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
-        >
-          <FaHome size={35} />
-          {/* <span>Home</span> */}
-        </Link>
-
-        <Link
-          href="/search"
-          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
-        >
-          <FaSearch size={35} />
-          {/* <span>Search</span> */}
-        </Link>
-
-        <Link
-          href="/create"
-          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
-        >
-          <FaPlusSquare size={35} />
-          {/* <span>Create</span> */}
-        </Link>
-
-        <Link
-          href="/notifications"
-          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
-        >
-          <FaHeart size={35} />
-          {/* <span>Notifications</span> */}
-        </Link>
-
-        <Link
-          href="/profile"
-          className="flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100"
-        >
-          <FaUser size={35} />
-          {/* <span>Profile</span> */}
-        </Link>
+      <div className="xl:h-screen bg-white xl:space-y-4 rounded-lg xl:justify-center justify-between text-sm text-gray-500 flex xl:flex-col">
+        {links.map(
+          (
+            { href, icon, label } 
+          ) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-col items-center gap-4 p-2 rounded-lg hover:bg-slate-100 ${
+                pathname === href ? "text-black" : ""
+              }`} 
+            >
+              {icon}
+            </Link>
+          )
+        )}
       </div>
       <div className="hidden xl:flex">
-        <FaMapPin size={35} />
+        <div>
+          <ClerkLoading>
+            <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white" />
+          </ClerkLoading>
+          <ClerkLoaded>
+            <SignedIn>
+              <div className="w-full h-max flex gap-4 text-4xl items-center ">
+                <UserButton />
+              </div>
+            </SignedIn>
+            <SignedOut>
+              <div className="flex items-center gap-2 text-sm">
+                {" "}
+                PLEASE LOG IN
+              </div>
+            </SignedOut>
+          </ClerkLoaded>
+        </div>
       </div>
     </div>
   );
